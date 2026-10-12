@@ -14,11 +14,14 @@ class BatLauncher:
         self.root.title("Bat & SH Launcher")
         self.root.geometry("700x500")
         self.folder = None
-        self.files = []           # хранит имена .bat и .sh
+        self.files = []
         self.load_config()
         self.build_ui()
         if self.folder and os.path.isdir(self.folder):
             self.refresh_list()
+
+        # Сохраняем папку при закрытии окна
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def load_config(self):
         if os.path.exists(CONFIG_FILE):
@@ -32,6 +35,11 @@ class BatLauncher:
     def save_config(self):
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump({"folder": self.folder}, f, ensure_ascii=False, indent=2)
+
+    def on_close(self):
+        """Сохранить настройки и закрыть окно."""
+        self.save_config()
+        self.root.destroy()
 
     def build_ui(self):
         top = tk.Frame(self.root)
@@ -60,7 +68,7 @@ class BatLauncher:
         tk.Button(bottom, text="▶ Run", command=self.run_selected,
                   bg="#2e7d32", fg="white", font=("Arial", 10, "bold")).pack(side="left")
         tk.Button(bottom, text="📝 Open in Notepad", command=self.open_in_notepad).pack(side="left", padx=5)
-        tk.Button(bottom, text="✖ Exit", command=self.root.quit).pack(side="right")
+        tk.Button(bottom, text="✖ Exit", command=self.on_close).pack(side="right")
 
     def choose_folder(self):
         folder = filedialog.askdirectory(title="Select folder with .bat / .sh files")
@@ -97,10 +105,8 @@ class BatLauncher:
 
         try:
             if lower.endswith(".bat"):
-                # Windows: cmd /c start
                 subprocess.Popen(["cmd", "/c", "start", "", path], shell=False)
             elif lower.endswith(".sh"):
-                # Linux: открыть Konsole, запустить sudo bash, показать вывод, дождаться Enter
                 cmd = f"sudo bash '{path}'; echo; echo '=== Готово. Нажми Enter для выхода ==='; read"
                 subprocess.Popen(["konsole", "-e", "bash", "-c", cmd])
             else:
@@ -116,7 +122,6 @@ class BatLauncher:
             if sys.platform.startswith("win"):
                 subprocess.Popen(["notepad.exe", path])
             else:
-                # Linux: открыть в редакторе по умолчанию
                 subprocess.Popen(["xdg-open", path])
         except Exception as e:
             messagebox.showerror("Error", str(e))
