@@ -100,10 +100,9 @@ class BatLauncher:
                 # Windows: cmd /c start
                 subprocess.Popen(["cmd", "/c", "start", "", path], shell=False)
             elif lower.endswith(".sh"):
-                # Linux: bash (или sudo bash, если нужно)
-                # Если у тебя .sh требуют sudo (Podman), раскомментируй строку с sudo
-                # subprocess.Popen(["sudo", "bash", path])
-                subprocess.Popen(["bash", path])
+                # Linux: открыть Konsole, запустить sudo bash, показать вывод, дождаться Enter
+                cmd = f"sudo bash '{path}'; echo; echo '=== Готово. Нажми Enter для выхода ==='; read"
+                subprocess.Popen(["konsole", "-e", "bash", "-c", cmd])
             else:
                 messagebox.showerror("Unknown type", f"Неизвестный тип файла: {path}")
         except Exception as e:
@@ -114,7 +113,6 @@ class BatLauncher:
         if not path:
             return
         try:
-            # Windows: notepad; Linux: xdg-open или nano в терминале
             if sys.platform.startswith("win"):
                 subprocess.Popen(["notepad.exe", path])
             else:
